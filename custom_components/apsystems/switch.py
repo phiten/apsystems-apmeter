@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from typing import Any
 
 from APsystemsEZ1 import APsystemsEZ1M
@@ -93,6 +94,7 @@ class ApSystemsInverterSwitch(
             return
         try:
             self.coordinator._poll_active = True
+            self.coordinator._poll_active_since = time.monotonic()
             # Persist user intent before the API call so that a failed command
             # cannot leave inverter_switch_on = False in storage and trigger the
             # coordinator's switch-restore loop, which would repeatedly turn the
@@ -100,7 +102,7 @@ class ApSystemsInverterSwitch(
             self.coordinator.inverter_switch_on = True
             await self.coordinator._save_state()
             self.async_write_ha_state()
-            await self._api.set_device_power_status(1)
+            await self._api.set_device_power_status(True)
             if (
                 self.coordinator.current_max_power is not None
                 and self.coordinator.current_max_power > 0
@@ -119,7 +121,8 @@ class ApSystemsInverterSwitch(
             return
         try:
             self.coordinator._poll_active = True
-            await self._api.set_device_power_status(0)
+            self.coordinator._poll_active_since = time.monotonic()
+            await self._api.set_device_power_status(False)
             self.coordinator.inverter_switch_on = False
             self.async_write_ha_state()
             await self.coordinator._save_state()

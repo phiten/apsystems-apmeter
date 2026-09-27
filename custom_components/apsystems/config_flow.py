@@ -9,11 +9,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 
 from .const import (
     CONF_BATTERY_SYSTEM,
     CONF_DETAIL_POLL,
+    CONF_ALARM_NOTIFICATIONS,
     CONF_DEVICE_NAME,
     CONF_LIFETIME_OFFSET_P1,
     CONF_LIFETIME_OFFSET_P2,
@@ -63,12 +65,20 @@ class ApSystemsFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 offset_p1 = _parse_offset(user_input.get(CONF_LIFETIME_OFFSET_P1))
-                offset_p2 = _parse_offset(user_input.get(CONF_LIFETIME_OFFSET_P2))
             except ValueError:
                 errors[CONF_LIFETIME_OFFSET_P1] = "invalid_offset"
+            try:
+                offset_p2 = _parse_offset(user_input.get(CONF_LIFETIME_OFFSET_P2))
+            except ValueError:
+                errors[CONF_LIFETIME_OFFSET_P2] = "invalid_offset"
 
             if not errors:
-                api = APsystemsEZ1M(ip_address=ip, port=port, timeout=8)
+                api = APsystemsEZ1M(
+                    ip_address=ip,
+                    port=port,
+                    timeout=10,
+                    session=async_get_clientsession(self.hass),
+                )
                 try:
                     device_info = await api.get_device_info()
                 except Exception:  # noqa: BLE001
@@ -137,6 +147,7 @@ class ApSystemsFlowHandler(ConfigFlow, domain=DOMAIN):
         current_battery = entry.data.get(CONF_BATTERY_SYSTEM, False)
         current_detail_poll = entry.data.get(CONF_DETAIL_POLL, True)
         current_slow_detail = entry.data.get(CONF_SLOW_DETAIL_POLL, False)
+        current_alarm_notifications = entry.data.get(CONF_ALARM_NOTIFICATIONS, True)
 
         # Load storage once when the form is first shown (user_input is None).
         # We detect the bug scenario where storage holds a non-zero offset that
@@ -170,9 +181,12 @@ class ApSystemsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 offset_p1 = _parse_offset(user_input.get(CONF_LIFETIME_OFFSET_P1))
-                offset_p2 = _parse_offset(user_input.get(CONF_LIFETIME_OFFSET_P2))
             except ValueError:
                 errors[CONF_LIFETIME_OFFSET_P1] = "invalid_offset"
+            try:
+                offset_p2 = _parse_offset(user_input.get(CONF_LIFETIME_OFFSET_P2))
+            except ValueError:
+                errors[CONF_LIFETIME_OFFSET_P2] = "invalid_offset"
 
             if not errors:
                 return self.async_update_reload_and_abort(
@@ -197,6 +211,7 @@ class ApSystemsFlowHandler(ConfigFlow, domain=DOMAIN):
                             user_input.get(CONF_SLOW_DETAIL_POLL, False)
                             if user_input.get(CONF_DETAIL_POLL, True) else False
                         ),
+                        CONF_ALARM_NOTIFICATIONS: user_input.get(CONF_ALARM_NOTIFICATIONS, True),
                         # Record what was shown to the user – the coordinator uses
                         # this as the delta reference and removes it after applying.
                         CONF_SHOWN_OFFSET_P1: self._prefill_p1,
@@ -251,6 +266,7 @@ class ApSystemsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_BATTERY_SYSTEM, default=current_battery): bool,
                     vol.Optional(CONF_DETAIL_POLL, default=current_detail_poll): bool,
                     vol.Optional(CONF_SLOW_DETAIL_POLL, default=current_slow_detail): bool,
+                    vol.Optional(CONF_ALARM_NOTIFICATIONS, default=current_alarm_notifications): bool,
                 }
             ),
             errors=errors,

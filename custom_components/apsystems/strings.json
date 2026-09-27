@@ -38,14 +38,16 @@
           "lifetime_offset_p2": "Lifetime energy start offset input 2 (kWh)",
           "battery_system": "Battery system (storage connected)",
           "slow_detail_poll": "Slow down extended data polling (recommended for EZ1-D)",
-          "detail_poll": "Query extended data (voltage, current, temperature)"
+          "detail_poll": "Query extended data (voltage, current, temperature)",
+          "alarm_notifications": "HA notifications on alarm"
         },
         "data_description": {
           "lifetime_offset_p1": "Currently stored offset for input 1. Only change if the value was entered incorrectly or a new reset has occurred. ⚠️ Negative values permanently reduce the displayed lifetime counter by this amount. Correction is possible by reconfiguring again with an adjusted value.",
           "lifetime_offset_p2": "Currently stored offset for input 2. ⚠️ Negative values permanently reduce the displayed lifetime counter by this amount. Correction is possible by reconfiguring again with an adjusted value.",
           "battery_system": "Enable if the inverter is connected to a battery storage system.",
           "slow_detail_poll": "Only applies when extended data polling is enabled above. Voltage, current and temperature are polled every 60 s instead of every cycle. Power and energy sensors are unaffected. Prevents timeout loops on inverters with limited HTTP server capacity (e.g. EZ1-D firmware 2.x).",
-          "detail_poll": "When disabled, only power and energy are polled. Disable if the inverter remains unstable (last resort, especially for EZ1-D with very old firmware)."
+          "detail_poll": "When disabled, only power and energy are polled. Disable if the inverter remains unstable (last resort, especially for EZ1-D with very old firmware).",
+          "alarm_notifications": "When enabled, a persistent HA notification appears on short circuit or grid failure. Disable if you prefer to monitor alarm states via sensors only."
         }
       }
     },
@@ -148,5 +150,20 @@
     "inverter_unreachable": {
       "message": "The inverter is not reachable. Check network connection and IP address."
     }
+  },
+  "notifications": {
+    "shortcircuit_1": {
+      "title": "Short circuit on Input 1",
+      "message": "Short circuit detected on Input 1."
+    },
+    "shortcircuit_2": {
+      "title": "Short circuit on Input 2",
+      "message": "Short circuit detected on Input 2."
+    },
+    "offgrid": {
+      "title": "Grid failure",
+      "message": "Grid failure detected."
+    },
+    "guidance": "**Recommended steps:**\n1. Check the device and connected panels\n2. Power cycle the inverter and verify after restart\n3. If the problem persists, contact APsystems support"
   }
 }

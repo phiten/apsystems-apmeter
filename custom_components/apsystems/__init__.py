@@ -6,8 +6,9 @@ from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DEVICE_NAME, DEFAULT_DEVICE_NAME, DEFAULT_PORT, LOGGER
+from .const import DEFAULT_PORT
 from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -23,7 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
     api = APsystemsEZ1M(
         ip_address=entry.data[CONF_IP_ADDRESS],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
-        timeout=8,
+        timeout=10,
+        session=async_get_clientsession(hass),
     )
     coordinator = ApSystemsDataCoordinator(hass, entry, api)
 

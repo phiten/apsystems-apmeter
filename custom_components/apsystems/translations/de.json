@@ -38,14 +38,16 @@
           "lifetime_offset_p2": "Lifetime-Energie Startoffset Eingang 2 (kWh)",
           "battery_system": "Batterie-System (Speicher angeschlossen)",
           "slow_detail_poll": "Erweiterte Daten langsamer abfragen (empfohlen für EZ1-D)",
-          "detail_poll": "Erweiterte Daten abfragen (Spannung, Strom, Temperatur)"
+          "detail_poll": "Erweiterte Daten abfragen (Spannung, Strom, Temperatur)",
+          "alarm_notifications": "HA-Benachrichtigungen bei Alarm"
         },
         "data_description": {
           "lifetime_offset_p1": "Aktuell gespeicherter Offset für Eingang 1. Nur ändern wenn der Wert falsch eingetragen wurde oder ein neuer Reset stattgefunden hat. ⚠️ Negative Werte reduzieren den angezeigten Lifetime-Zähler dauerhaft um diesen Betrag. Korrektur ist über erneutes Reconfigure mit angepasstem Wert möglich.",
           "lifetime_offset_p2": "Aktuell gespeicherter Offset für Eingang 2. ⚠️ Negative Werte reduzieren den angezeigten Lifetime-Zähler dauerhaft um diesen Betrag. Korrektur ist über erneutes Reconfigure mit angepasstem Wert möglich.",
           "battery_system": "Aktivieren wenn der Wechselrichter an einem Batteriespeicher angeschlossen ist.",
           "slow_detail_poll": "Nur wirksam wenn erweiterte Daten abgefragt werden (Option oben). Spannung, Strom und Temperatur werden alle 60 s statt bei jedem Poll abgefragt. Leistungs- und Energiesensoren sind nicht betroffen. Verhindert Timeout-Schleifen bei Wechselrichtern mit begrenzter HTTP-Server-Kapazität (z. B. EZ1-D Firmware 2.x).",
-          "detail_poll": "Wenn deaktiviert werden nur Leistung und Energie abgefragt. Deaktivieren wenn der Wechselrichter auch mit langsamerem Abfragen instabil bleibt (letzter Ausweg, z. B. EZ1-D mit sehr alter Firmware)."
+          "detail_poll": "Wenn deaktiviert werden nur Leistung und Energie abgefragt. Deaktivieren wenn der Wechselrichter auch mit langsamerem Abfragen instabil bleibt (letzter Ausweg, z. B. EZ1-D mit sehr alter Firmware).",
+          "alarm_notifications": "Wenn aktiviert, erscheint bei Kurzschluss oder Netzausfall eine HA-Benachrichtigung. Deaktivieren wenn nur die Sensorenzustände gewünscht sind."
         }
       }
     },
@@ -148,5 +150,20 @@
     "inverter_unreachable": {
       "message": "Der Wechselrichter ist nicht erreichbar. Netzwerkverbindung und IP-Adresse prüfen."
     }
+  },
+  "notifications": {
+    "shortcircuit_1": {
+      "title": "Kurzschluss an Eingang 1",
+      "message": "Kurzschluss an Eingang 1 erkannt."
+    },
+    "shortcircuit_2": {
+      "title": "Kurzschluss an Eingang 2",
+      "message": "Kurzschluss an Eingang 2 erkannt."
+    },
+    "offgrid": {
+      "title": "Netzausfall",
+      "message": "Netzausfall erkannt."
+    },
+    "guidance": "**Empfohlene Schritte:**\n1. Gerät und angeschlossene Panels überprüfen\n2. Wechselrichter stromlos schalten und nach Neustart erneut prüfen\n3. Wenn der Fehler bestehen bleibt: APsystems Support kontaktieren"
   }
 }

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import date, timedelta
+import json
+import pathlib
 import time
 
 from APsystemsEZ1 import (
@@ -18,10 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_ALARM_NOTIFICATIONS,
     CONF_BATTERY_SYSTEM,
     CONF_DETAIL_POLL,
     CONF_DEVICE_NAME,
@@ -31,7 +33,6 @@ from .const import (
     CONF_SHOWN_OFFSET_P1,
     CONF_SHOWN_OFFSET_P2,
     CONF_SLOW_DETAIL_POLL,
-    DOMAIN,
     LOGGER,
     MODEL_BY_MAX_POWER,
     POLLING_INTERVAL,
@@ -318,6 +319,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         # this coordinator instance, so it is only logged once per HA run.
         self._unknown_model_logged: bool = False
         self._active_alarm_notifications: set[str] = set()
+        self._alarm_texts: dict | None = None  # cached after first load
 
     @property
     def _log_id(self) -> str:
@@ -491,6 +493,10 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         called once to ensure flash is at the hardware maximum. All
         subsequent user changes use setMaxPower (RAM only).
         """
+        if not self.inverter_switch_on:
+            # Inverter is OFF: RAM returns 0 and flash returns hardware max –
+            # neither is the user's configured limit. Keep the stored value.
+            return
         # Try getDefaultMaxPower first (firmware 1.9.x+)
         try:
             resp = await self.api._request("getDefaultMaxPower")
@@ -501,7 +507,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                 # the user may have set a different RAM value.
                 try:
                     ram_val = await self.api.get_max_power()
-                    if ram_val is not None:
+                    if ram_val is not None and float(ram_val) != 0:
                         self.current_max_power = float(ram_val)
                     else:
                         self.current_max_power = float(self.default_max_power)
@@ -521,7 +527,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         # Older firmware: getMaxPower persists across restarts (writes flash)
         try:
             result = await self.api.get_max_power()
-            if result is not None:
+            if result is not None and float(result) != 0:
                 self.current_max_power = float(result)
                 LOGGER.debug(
                     "[%s] Power limit fetched (getMaxPower, flash-backed): %sW",
@@ -597,7 +603,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                     self._te2_day_start = self._te2_last_out - self._e2_protected
 
             mp = data.get("current_max_power")
-            if mp is not None:
+            if mp is not None and float(mp) != 0:
                 self.current_max_power = float(mp)
             dmp = data.get("default_max_power")
             if dmp is not None:
@@ -1002,6 +1008,45 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                 self._switch_restore_done = False
                 self._switch_restore_verify_at = 0.0
 
+    def _record_poll_failure(self) -> ApSystemsSensorData:
+        """Shared bookkeeping for a failed poll.
+
+        Both the InverterReturnedError and the generic Exception path in
+        _async_update_data funnel through here after logging their own,
+        differently-worded message. Zeroes live power immediately, zeroes
+        detail sensors once the inverter has clearly gone offline (3+
+        consecutive failures), resets the restore/verify state machines for
+        power limit and switch, marks the inverter unreachable, and returns
+        cached fallback data instead of raising – keeping this in one place
+        avoids the two error paths drifting apart over time.
+        """
+        # Zero power immediately on any error – prevents false statistics
+        self._fallback_data.output_data.p1 = 0
+        self._fallback_data.output_data.p2 = 0
+        # After 3 failed polls, also zero electrical detail sensors
+        # (voltage, current, grid) – inverter has clearly gone offline.
+        # Temperature is preserved as last known value.
+        if self._consecutive_errors >= 3 and self._fallback_detail is not None:
+            self._fallback_detail.v1 = 0.0
+            self._fallback_detail.v2 = 0.0
+            self._fallback_detail.c1 = 0.0
+            self._fallback_detail.c2 = 0.0
+            self._fallback_detail.gv = 0.0
+            self._fallback_detail.gf = 0.0
+            self._fallback_data = ApSystemsSensorData(
+                output_data=self._fallback_data.output_data,
+                alarm_info=self._fallback_data.alarm_info,
+                detail_data=self._fallback_detail,
+            )
+        self._stable_polls_after_error = 0
+        if self._consecutive_errors >= 3:
+            self._power_limit_restored = False
+        if self._consecutive_errors >= 2:
+            self._switch_restore_done = False
+            self._switch_restore_verify_at = 0.0
+        self.inverter_reachable = False
+        return self._fallback_data
+
     async def _async_update_data(self) -> ApSystemsSensorData:
         """Fetch data from inverter, always returning valid data.
 
@@ -1054,39 +1099,14 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                 LOGGER.debug(
                     "[%s] Inverter still returning errors after %d polls (%ds).",
                     self._log_id, self._consecutive_errors,
-                    self._consecutive_errors * POLLING_INTERVAL,
+                    int(self._consecutive_errors * self.update_interval.total_seconds()),
                 )
             elif self._consecutive_errors % 50 == 0:
                 LOGGER.debug(
                     "[%s] Inverter error (consecutive: %d) – serving cached data.",
                     self._log_id, self._consecutive_errors,
                 )
-            # Zero power immediately on any error – prevents false statistics
-            self._fallback_data.output_data.p1 = 0
-            self._fallback_data.output_data.p2 = 0
-            # After 3 failed polls, also zero electrical detail sensors
-            # (voltage, current, grid) – inverter has clearly gone offline.
-            # Temperature is preserved as last known value.
-            if self._consecutive_errors >= 3 and self._fallback_detail is not None:
-                self._fallback_detail.v1 = 0.0
-                self._fallback_detail.v2 = 0.0
-                self._fallback_detail.c1 = 0.0
-                self._fallback_detail.c2 = 0.0
-                self._fallback_detail.gv = 0.0
-                self._fallback_detail.gf = 0.0
-                self._fallback_data = ApSystemsSensorData(
-                    output_data=self._fallback_data.output_data,
-                    alarm_info=self._fallback_data.alarm_info,
-                    detail_data=self._fallback_detail,
-                )
-            self._stable_polls_after_error = 0
-            if self._consecutive_errors >= 3:
-                self._power_limit_restored = False
-            if self._consecutive_errors >= 2:
-                self._switch_restore_done = False
-                self._switch_restore_verify_at = 0.0
-            self.inverter_reachable = False
-            return self._fallback_data
+            return self._record_poll_failure()
 
         except Exception as err:  # noqa: BLE001
             self._consecutive_errors += 1
@@ -1107,32 +1127,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                     "[%s] Inverter unreachable (consecutive: %d) – serving cached data.",
                     self._log_id, self._consecutive_errors,
                 )
-            # Zero power immediately on any error – prevents false statistics
-            self._fallback_data.output_data.p1 = 0
-            self._fallback_data.output_data.p2 = 0
-            # After 3 failed polls, also zero electrical detail sensors
-            # (voltage, current, grid) – inverter has clearly gone offline.
-            # Temperature is preserved as last known value.
-            if self._consecutive_errors >= 3 and self._fallback_detail is not None:
-                self._fallback_detail.v1 = 0.0
-                self._fallback_detail.v2 = 0.0
-                self._fallback_detail.c1 = 0.0
-                self._fallback_detail.c2 = 0.0
-                self._fallback_detail.gv = 0.0
-                self._fallback_detail.gf = 0.0
-                self._fallback_data = ApSystemsSensorData(
-                    output_data=self._fallback_data.output_data,
-                    alarm_info=self._fallback_data.alarm_info,
-                    detail_data=self._fallback_detail,
-                )
-            self._stable_polls_after_error = 0
-            if self._consecutive_errors >= 3:
-                self._power_limit_restored = False
-            if self._consecutive_errors >= 2:
-                self._switch_restore_done = False
-                self._switch_restore_verify_at = 0.0
-            self.inverter_reachable = False
-            return self._fallback_data
+            return self._record_poll_failure()
 
         finally:
             self._poll_active = False
@@ -1215,8 +1210,30 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                 self._detail_supported = False
         return None
 
+    async def _get_alarm_texts(self) -> dict:
+        """Load alarm notification texts for the active HA language, cached after first call."""
+        if self._alarm_texts is not None:
+            return self._alarm_texts
+        lang = self.hass.config.language.replace("_", "-").split("-")[0].lower()
+        trans_dir = pathlib.Path(__file__).parent / "translations"
+
+        def _load() -> dict:
+            for candidate in (lang, "en"):
+                f = trans_dir / f"{candidate}.json"
+                if f.exists():
+                    try:
+                        return json.loads(f.read_text(encoding="utf-8")).get("notifications", {})
+                    except Exception:  # noqa: BLE001
+                        pass
+            return {}
+
+        self._alarm_texts = await self.hass.async_add_executor_job(_load)
+        return self._alarm_texts
+
     async def _handle_alarm_notifications(self, alarm_info: ReturnAlarmInfo) -> None:
         """Create or dismiss HA persistent notifications on alarm state changes."""
+        if not self.config_entry.data.get(CONF_ALARM_NOTIFICATIONS, True):
+            return
         from homeassistant.components.persistent_notification import (
             async_create,
             async_dismiss,
@@ -1226,31 +1243,27 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         device_label = f"{device_name} ({self._log_id})"
         entry_id = self.config_entry.entry_id
 
-        guidance = (
-            "\n\n**Empfohlene Schritte / Recommended steps:**\n"
-            "1. Gerät und angeschlossene Panels überprüfen / "
-            "Check the device and connected panels\n"
-            "2. Wechselrichter stromlos schalten und nach Neustart erneut prüfen / "
-            "Power cycle the inverter and verify after restart\n"
-            "3. Wenn der Fehler bestehen bleibt: APsystems Support kontaktieren / "
-            "If the problem persists, contact APsystems support"
-        )
+        texts = await self._get_alarm_texts()
+        guidance = texts.get("guidance", "")
+
+        def _alarm(key: str, fallback_title: str, fallback_msg: str) -> tuple[str, str]:
+            t = texts.get(key, {})
+            title = f"⚠️ {device_label} – {t.get('title', fallback_title)}"
+            msg = t.get("message", fallback_msg)
+            return title, f"{msg}\n\n{guidance}" if guidance else msg
 
         alarms = {
             f"apsystems_{entry_id}_sc1": (
                 getattr(alarm_info, "shortcircuit_1", False),
-                f"⚠️ {device_label} – Kurzschluss an Eingang 1 / Short circuit on Input 1",
-                f"Kurzschluss an Eingang 1 erkannt.\nShort circuit detected on Input 1.{guidance}",
+                *_alarm("shortcircuit_1", "Short circuit on Input 1", "Short circuit detected on Input 1."),
             ),
             f"apsystems_{entry_id}_sc2": (
                 getattr(alarm_info, "shortcircuit_2", False),
-                f"⚠️ {device_label} – Kurzschluss an Eingang 2 / Short circuit on Input 2",
-                f"Kurzschluss an Eingang 2 erkannt.\nShort circuit detected on Input 2.{guidance}",
+                *_alarm("shortcircuit_2", "Short circuit on Input 2", "Short circuit detected on Input 2."),
             ),
             f"apsystems_{entry_id}_grid": (
                 getattr(alarm_info, "offgrid", False),
-                f"⚠️ {device_label} – Netzausfall / Grid failure",
-                f"Netzausfall erkannt.\nGrid failure detected.{guidance}",
+                *_alarm("offgrid", "Grid failure", "Grid failure detected."),
             ),
         }
 
@@ -1392,8 +1405,8 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         _now = time.monotonic()
         _verify_due = self._power_limit_verify_at > 0 and _now >= self._power_limit_verify_at
         _do_restore = not self._power_limit_restored or _verify_due
-        if self._stable_polls_after_error >= 3 and self.current_max_power is not None and _do_restore:
-            _restore_attempt = self._stable_polls_after_error - 2
+        if self._stable_polls_after_error >= 2 and self.current_max_power is not None and _do_restore and self.inverter_switch_on:
+            _restore_attempt = self._stable_polls_after_error
             if not self._power_limit_restored and _restore_attempt <= _MAX_RESTORE_ATTEMPTS:
                 try:
                     inverter_limit = await self.api.get_max_power()
@@ -1484,7 +1497,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                     if already_off:
                         LOGGER.debug("[%s] Switch restore: EZ1 already OFF – skipping.", self._log_id)
                     else:
-                        await self.api.set_device_power_status(0)
+                        await self.api.set_device_power_status(False)
                         LOGGER.debug(
                             "[%s] Inverter switch restored to OFF after reconnect (attempt %d/%d).",
                             self._log_id, _switch_restore_attempt, _SWITCH_RESTORE_MAX_ATTEMPTS,
@@ -1511,13 +1524,29 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
                 try:
                     resp = await self.api._request("getOnOff")
                     if resp and resp.get("data", {}).get("status") == "0":
-                        await self.api.set_device_power_status(0)
+                        await self.api.set_device_power_status(False)
                         LOGGER.debug("[%s] Switch re-applied to OFF – EZ1 had reset to ON.", self._log_id)
                     else:
                         LOGGER.debug("[%s] Switch verification OK – EZ1 is OFF.", self._log_id)
                     self._switch_restore_verify_at = _now_sw + _SWITCH_RESTORE_VERIFY_INTERVAL
                 except Exception:  # noqa: BLE001
                     self._switch_restore_verify_at = _now_sw + _SWITCH_RESTORE_VERIFY_INTERVAL
+
+            # Production-based safety check: if the inverter is producing despite
+            # the switch being OFF, re-apply OFF immediately without waiting for
+            # the next verify interval. Catches fast self-resets (e.g. battery systems).
+            if (
+                self._switch_restore_done
+                and ((output_data.p1 or 0) > 0 or (output_data.p2 or 0) > 0)
+            ):
+                try:
+                    await self.api.set_device_power_status(False)
+                    LOGGER.debug(
+                        "[%s] Switch re-applied to OFF – production detected (p1=%sW p2=%sW).",
+                        self._log_id, output_data.p1, output_data.p2,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
 
         output_data, needs_save = self._compensate_lifetime_energy(output_data)
         if needs_save:

@@ -1,0 +1,169 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer l'onduleur APsystems",
+        "description": "Entrez les informations de connexion et un nom pour votre onduleur.",
+        "data": {
+          "ip_address": "Adresse IP",
+          "port": "Port",
+          "device_name": "Nom de l'appareil",
+          "polling_interval": "Intervalle d'interrogation (secondes)",
+          "lifetime_offset_p1": "Décalage de départ énergie à vie entrée 1 (kWh)",
+          "lifetime_offset_p2": "Décalage de départ énergie à vie entrée 2 (kWh)",
+          "battery_system": "Système batterie (stockage connecté)",
+          "slow_detail_poll": "Ralentir l'interrogation des données étendues (recommandé pour EZ1-D)",
+          "detail_poll": "Interroger les données étendues (tension, courant, température)"
+        },
+        "data_description": {
+          "ip_address": "Adresse IP locale de l'onduleur (IP statique recommandée).",
+          "port": "Port API de l'onduleur (par défaut : 8050).",
+          "device_name": "Nom personnalisé, par ex. 'Balcon solaire' ou 'Garage solaire'.",
+          "polling_interval": "Fréquence d'interrogation de l'onduleur (12–60 secondes). Des valeurs plus faibles augmentent la charge et peuvent provoquer des déconnexions Wi-Fi. Par défaut : 12 secondes.",
+          "lifetime_offset_p1": "Optionnel. À remplir uniquement si le compteur interne de l'onduleur a déjà été remis à zéro (bug firmware connu à ~540 kWh). Entrez la valeur produite avant la remise à zéro en kWh, par ex. '542.3'. Laisser vide si aucune remise à zéro n'a eu lieu.",
+          "lifetime_offset_p2": "Identique à ci-dessus mais pour l'entrée 2. Laisser vide si aucune remise à zéro n'a eu lieu.",
+          "battery_system": "Activer si l'onduleur est connecté à un système de stockage par batterie. Active des vérifications plus fréquentes (toutes les 5 min au lieu de 10 min) que la limite de puissance est correctement restaurée après le redémarrage matinal.",
+          "slow_detail_poll": "Applicable uniquement si l'interrogation des données étendues est activée. Tension, courant et température sont interrogés toutes les 60 s au lieu de chaque cycle. Évite les boucles de délai d'attente sur les onduleurs à capacité HTTP limitée.",
+          "detail_poll": "Si désactivé, seules la puissance et l'énergie sont interrogées. Désactiver si l'onduleur reste instable (dernier recours, notamment pour EZ1-D avec un firmware très ancien)."
+        }
+      },
+      "reconfigure": {
+        "title": "Mettre à jour les paramètres APsystems",
+        "description": "{offset_info}Corriger les informations de connexion ou les décalages d'énergie à vie.",
+        "data": {
+          "ip_address": "Adresse IP",
+          "port": "Port",
+          "polling_interval": "Intervalle d'interrogation (secondes)",
+          "lifetime_offset_p1": "Décalage de départ énergie à vie entrée 1 (kWh)",
+          "lifetime_offset_p2": "Décalage de départ énergie à vie entrée 2 (kWh)",
+          "battery_system": "Système batterie (stockage connecté)",
+          "slow_detail_poll": "Ralentir l'interrogation des données étendues (recommandé pour EZ1-D)",
+          "detail_poll": "Interroger les données étendues (tension, courant, température)",
+          "alarm_notifications": "Notifications HA en cas d'alarme"
+        },
+        "data_description": {
+          "lifetime_offset_p1": "Décalage actuellement enregistré pour l'entrée 1. Ne modifier que si la valeur est incorrecte ou si une nouvelle remise à zéro a eu lieu. ⚠️ Les valeurs négatives réduisent définitivement le compteur affiché.",
+          "lifetime_offset_p2": "Décalage actuellement enregistré pour l'entrée 2. ⚠️ Les valeurs négatives réduisent définitivement le compteur affiché.",
+          "battery_system": "Activer si l'onduleur est connecté à un système de stockage par batterie.",
+          "slow_detail_poll": "Tension, courant et température sont interrogés toutes les 60 s. Évite les boucles de délai d'attente sur les onduleurs à capacité HTTP limitée.",
+          "detail_poll": "Si désactivé, seules la puissance et l'énergie sont interrogées.",
+          "alarm_notifications": "Si activé, une notification HA persistante apparaît en cas de court-circuit ou de panne de réseau. Désactiver si vous préférez surveiller les alarmes uniquement via les capteurs."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de connexion à l'onduleur. Vérifiez l'adresse IP et le port.",
+      "invalid_offset": "Valeur de décalage invalide. Entrez un nombre en kWh, par ex. '542.3', ou laissez le champ vide."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_power": {
+        "name": "Puissance totale"
+      },
+      "total_power_p1": {
+        "name": "Puissance de P1"
+      },
+      "total_power_p2": {
+        "name": "Puissance de P2"
+      },
+      "today_production": {
+        "name": "Production du jour"
+      },
+      "today_production_p1": {
+        "name": "Production de P1 aujourd'hui"
+      },
+      "today_production_p2": {
+        "name": "Production de P2 aujourd'hui"
+      },
+      "lifetime_production": {
+        "name": "Production totale sur la durée de vie"
+      },
+      "lifetime_production_p1": {
+        "name": "Production de P1 sur la durée de vie"
+      },
+      "lifetime_production_p2": {
+        "name": "Production de P2 sur la durée de vie"
+      },
+      "firmware_version": {
+        "name": "Version du firmware"
+      },
+      "voltage_p1": {
+        "name": "Tension DC P1"
+      },
+      "voltage_p2": {
+        "name": "Tension DC P2"
+      },
+      "current_p1": {
+        "name": "Courant DC P1"
+      },
+      "current_p2": {
+        "name": "Courant DC P2"
+      },
+      "grid_voltage": {
+        "name": "Tension réseau"
+      },
+      "grid_frequency": {
+        "name": "Fréquence réseau"
+      },
+      "inverter_temperature": {
+        "name": "Température de l'onduleur"
+      },
+      "flash_write_count": {
+        "name": "Écritures flash"
+      }
+    },
+    "binary_sensor": {
+      "off_grid_status": {
+        "name": "Panne de réseau"
+      },
+      "dc_1_short_circuit_error_status": {
+        "name": "Court-circuit entrée 1"
+      },
+      "dc_2_short_circuit_error_status": {
+        "name": "Court-circuit entrée 2"
+      },
+      "inverter_active": {
+        "name": "Onduleur actif",
+        "state": {
+          "on": "En fonctionnement",
+          "off": "Éteint"
+        }
+      }
+    },
+    "number": {
+      "max_output": {
+        "name": "Limite de puissance",
+        "description": "Plage autorisée : 30 W – 800 W (EZ1-M)"
+      }
+    },
+    "switch": {
+      "inverter_status": {
+        "name": "Onduleur"
+      }
+    }
+  },
+  "exceptions": {
+    "inverter_error": {
+      "message": "L'onduleur a renvoyé une erreur. Il est peut-être en veille ou en mode nuit."
+    },
+    "inverter_unreachable": {
+      "message": "L'onduleur est inaccessible. Vérifiez la connexion réseau et l'adresse IP."
+    }
+  },
+  "notifications": {
+    "shortcircuit_1": {
+      "title": "Court-circuit sur l'entrée 1",
+      "message": "Court-circuit détecté sur l'entrée 1."
+    },
+    "shortcircuit_2": {
+      "title": "Court-circuit sur l'entrée 2",
+      "message": "Court-circuit détecté sur l'entrée 2."
+    },
+    "offgrid": {
+      "title": "Panne de réseau",
+      "message": "Panne de réseau détectée."
+    },
+    "guidance": "**Étapes recommandées :**\n1. Vérifier l'appareil et les panneaux connectés\n2. Couper l'alimentation de l'onduleur et revérifier après redémarrage\n3. Si le problème persiste, contacter le support APsystems"
+  }
+}

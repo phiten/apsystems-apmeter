@@ -127,8 +127,20 @@ Beim Setup kann der Poll Intervall zwischen 12–60 Sekunden eingestellt werden.
 ### ✨ Umfassendes Logging
 Alle relevanten Ereignisse werden mit sinnvollen Log-Leveln protokolliert. Sichtbar unter **Einstellungen → System → Protokolle**, nach `apsystems` filtern.
 
-### ✨ Deutsche Übersetzungen
-Alle Entitätsnamen sind auf Deutsch verfügbar.
+### ✨ Mehrsprachige Übersetzungen
+Alle Entitätsnamen und Setup-Texte sind auf Deutsch, Englisch, Französisch, Spanisch und Portugiesisch verfügbar. Alarm-Benachrichtigungen erscheinen automatisch in der aktiven HA-Sprache.
+
+### ✨ Alarm-Benachrichtigungen
+Kurzschluss an Eingang 1/2 sowie Netzausfall lösen automatisch eine HA-Benachrichtigung mit Handlungsanweisung aus. Die Benachrichtigung verschwindet sobald der Alarm wieder inaktiv ist.
+
+### ✨ Leistungsbegrenzung bleibt sichtbar
+Das Eingabefeld „Leistungsbegrenzung" bleibt auch bei ausgeschaltetem oder nicht erreichbarem Wechselrichter mit dem letzten bekannten Wert sichtbar. Schreiben ist in diesem Zustand blockiert.
+
+### ✨ Batterie-System-Modus
+Aktivierbar wenn der EZ1 hinter einem Speichersystem betrieben wird. Prüft die Leistungsbegrenzung häufiger nach dem Neustart (alle 5 statt 10 Minuten) und stellt sicher dass der eingestellte Wert sofort nach dem Hochfahren wiederhergestellt wird.
+
+### ✨ Erweitertes Daten-Polling konfigurierbar
+Das Abfragen von Spannung, Strom und Temperatur (`getOutputDataDetail`) kann im Setup deaktiviert oder auf einen langsameren 60s-Rhythmus umgestellt werden – empfohlen für EZ1-D mit älterer Firmware die instabil auf häufige Anfragen reagiert.
 
 ### ✨ EZ1-D Unterstützung
 Der EZ1-D (bis 1800W) wird unterstützt. Die Leistungsgrenze wird dynamisch vom Gerät gelesen – der 800W Fallback gilt nur wenn `getDeviceInfo()` keinen Wert liefert.
@@ -165,6 +177,7 @@ Im Reconfigure-Dialog kann der Lifetime-Energie-Offset pro Eingang eingetragen w
 | `binary_sensor.{name}_kurzschluss_eingang_1` | Kurzschluss Eingang 1 (Diagnose) | – |
 | `binary_sensor.{name}_kurzschluss_eingang_2` | Kurzschluss Eingang 2 (Diagnose) | – |
 | `sensor.{name}_firmware_version` | Firmware-Version (Diagnose) | – |
+| `sensor.{name}_flash_schreibzugriffe` | Flash-Schreibzugriffe (Diagnose) | – |
 | `binary_sensor.{name}_wechselrichter_aktiv` | In Betrieb / Ausgeschaltet (Diagnose) | – |
 | `number.{name}_leistungsbegrenzung` | Maximale Ausgangsleistung (30–800W / 30–1800W beim EZ1-D) | W |
 | `switch.{name}_wechselrichter` | Wechselrichter Ein/Aus | – |
@@ -442,8 +455,20 @@ The polling interval can be configured between 12–60 seconds during setup.
 ### ✨ Comprehensive logging
 All relevant events are logged with sensible log levels. Visible under **Settings → System → Logs**, filter by `apsystems`.
 
-### ✨ German translations
-All entity names are available in German.
+### ✨ Multilingual translations
+All entity names and setup texts are available in German, English, French, Spanish and Portuguese. Alarm notifications appear automatically in the active HA language.
+
+### ✨ Alarm notifications
+Short circuits on Input 1/2 and grid failures automatically trigger an HA persistent notification with recommended next steps. The notification is dismissed automatically once the alarm clears.
+
+### ✨ Power limit stays visible
+The "Max output" control remains visible with its last known value even when the inverter is offline or switched off. Writing is blocked in this state.
+
+### ✨ Battery system mode
+Can be enabled when the EZ1 is operated behind a battery storage system. Verifies the power limit more frequently after restart (every 5 instead of 10 minutes) to ensure the configured limit is restored immediately after boot.
+
+### ✨ Extended data polling configurable
+Polling of voltage, current and temperature (`getOutputDataDetail`) can be disabled in setup or slowed down to a 60s interval – recommended for EZ1-D with older firmware that responds unstably to frequent requests.
 
 ### ✨ EZ1-D support
 The EZ1-D (up to 1800W) is supported. The power limit is read dynamically from the device – the 800W fallback only applies when `getDeviceInfo()` returns no value.
@@ -480,6 +505,7 @@ The lifetime energy offset per input can be entered in the Reconfigure dialog an
 | `binary_sensor.{name}_kurzschluss_eingang_1` | Short circuit input 1 (diagnostic) | – |
 | `binary_sensor.{name}_kurzschluss_eingang_2` | Short circuit input 2 (diagnostic) | – |
 | `sensor.{name}_firmware_version` | Firmware version (diagnostic) | – |
+| `sensor.{name}_flash_write_count` | Flash write count (diagnostic) | – |
 | `binary_sensor.{name}_wechselrichter_aktiv` | Running / Off (diagnostic) | – |
 | `number.{name}_leistungsbegrenzung` | Maximum output power (30–800W / 30–1800W on EZ1-D) | W |
 | `switch.{name}_wechselrichter` | Inverter on/off | – |
@@ -620,6 +646,20 @@ This integration is not affiliated with APsystems or Sonnenladen GmbH. The goal 
 |---|---|
 | 💬 **Questions & Ideas** | [GitHub Discussions](https://github.com/shopf/apsystems-ez1-enhanced/discussions) |
 | 🐛 **Bug Reports** | [GitHub Issues](https://github.com/shopf/apsystems-ez1-enhanced/issues) |
+
+---
+
+## Languages
+
+| Language | Code | Status |
+|----------|------|--------|
+| German | `de` | ✅ Complete |
+| English | `en` | ✅ Complete |
+| French | `fr` | ✅ Complete |
+| Spanish | `es` | ✅ Complete |
+| Portuguese | `pt` | ✅ Complete |
+
+Want a new language or spotted a small translation error? Just open a [Discussion](https://github.com/shopf/apsystems-ez1-enhanced/discussions) or submit a Pull Request directly – contributions are very welcome!
 
 ---
 

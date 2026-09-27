@@ -38,6 +38,7 @@ STORE_VERSION = 1
 CONF_BATTERY_SYSTEM = "battery_system"
 CONF_DETAIL_POLL = "detail_poll"       # False → skip getOutputDataDetail entirely
 CONF_SLOW_DETAIL_POLL = "slow_detail_poll"
+CONF_ALARM_NOTIFICATIONS = "alarm_notifications"  # False → suppress HA persistent notifications
 
 # Model detection based on the hardware maximum output power (VA) reported
 # by getDeviceInfo() (field "maxPower").

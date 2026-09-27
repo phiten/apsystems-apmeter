@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 
 from APsystemsEZ1 import APsystemsEZ1M
 
@@ -12,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
@@ -122,6 +124,7 @@ class ApSystemsMaxPowerNumber(
 
         try:
             self.coordinator._poll_active = True
+            self.coordinator._poll_active_since = time.monotonic()
             await self._api.set_max_power(int(value))
 
             # On older firmware (no getDefaultMaxPower endpoint), setMaxPower
@@ -129,8 +132,7 @@ class ApSystemsMaxPowerNumber(
             # of potential flash wear from frequent changes.
             # On newer firmware default_max_power is set → RAM-only → no warning.
             if self.coordinator.default_max_power is None:
-                from datetime import date as _date
-                today = _date.today()
+                today = dt_util.now().date()
                 self.coordinator.flash_write_count += 1
                 if self.coordinator._last_flash_warning_date != today:
                     self.coordinator._last_flash_warning_date = today
@@ -142,10 +144,10 @@ class ApSystemsMaxPowerNumber(
                         "(This warning appears at most once per day.)",
                         int(value),
                     )
-        except ValueError as err:
+        except Exception as err:  # noqa: BLE001
             LOGGER.error("Failed to set power limit to %sW: %s", value, err)
             raise HomeAssistantError(
-                f"Inverter rejected power limit of {value}W: {err}"
+                f"Could not set power limit to {value}W: {err}"
             ) from err
         finally:
             self.coordinator._poll_active = False
