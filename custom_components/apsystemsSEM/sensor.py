@@ -13,11 +13,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     EntityCategory,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -73,16 +75,16 @@ SENSORS: tuple[ApMeterSensorDescription, ...] = (
     ApMeterSensorDescription(
         key="total_reactive_power",
         translation_key="total_reactive_power",
-        native_unit_of_measurement=UnitOfPower.VOLT_AMPERE_REACTIVE,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.q,
     ),
     ApMeterSensorDescription(
         key="total_apparent_power",
         translation_key="total_apparent_power",
-        native_unit_of_measurement=UnitOfPower.VOLT_AMPERE,
-        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.s,
     ),
