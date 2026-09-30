@@ -15,20 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_ALARM_NOTIFICATIONS,
-    CONF_BATTERY_SYSTEM,
-    CONF_DETAIL_POLL,
-    CONF_DEVICE_NAME,
-    CONF_LIFETIME_OFFSET_P1,
-    CONF_LIFETIME_OFFSET_P2,
     CONF_POLLING_INTERVAL,
-    CONF_SHOWN_OFFSET_P1,
-    CONF_SHOWN_OFFSET_P2,
-    CONF_SLOW_DETAIL_POLL,
     LOGGER,
     POLLING_INTERVAL,
-    STORE_KEY,
-    STORE_VERSION,
 )
 
 
