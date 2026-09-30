@@ -315,4 +315,6 @@ class ApMeterSensorWithDescription(
 
     @property
     def available(self) -> bool:
-        return self.coordinator.data is not None
+        if self.coordinator.data is None:
+            return False
+        return getattr(self.coordinator, "is_data_available", True)

@@ -190,6 +190,7 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
     device_version: str
     device_ip: str
     inverter_reachable: bool = False
+    max_failed_updates = 10
 
     def __init__(self, hass: HomeAssistant, config_entry: ApMeterConfigEntry, api: APmeterClient) -> None:
         super().__init__(
@@ -206,6 +207,9 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
             output_data=ApMeterOutputData(),
             device_info=ApMeterDeviceInfo(),
         )
+        self._last_good_data = self._fallback_data
+        self._failed_update_count = 0
+        self._is_data_available = True
 
     @property
     def _log_id(self) -> str:
@@ -215,12 +219,17 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
     def detected_model(self) -> str:
         return "SEM"
 
+    @property
+    def is_data_available(self) -> bool:
+        return self._is_data_available
+
     async def _async_setup(self) -> None:
         try:
             info = await self.api.get_device_info()
             self.device_version = info.devVer or "unknown"
             self.device_ip = info.ip or self.config_entry.data.get(CONF_IP_ADDRESS, "unknown")
             self._fallback_data = ApMeterSensorData(output_data=ApMeterOutputData(), device_info=info)
+            self._last_good_data = self._fallback_data
             LOGGER.info("[%s] APmeter connected – type=%s, firmware=%s", self._log_id, info.type, self.device_version)
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("[%s] APmeter not reachable during setup: %s", self._log_id, err)
@@ -232,13 +241,23 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
             self.device_ip = device_info.ip or self.config_entry.data.get(CONF_IP_ADDRESS, "unknown")
             output_data = await self.api.get_output_data()
             self.inverter_reachable = True
+            self._failed_update_count = 0
+            self._is_data_available = True
             result = ApMeterSensorData(output_data=output_data, device_info=device_info)
+            self._last_good_data = result
             self._fallback_data = result
             return result
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("[%s] APmeter update failed: %s", self._log_id, err)
             self.inverter_reachable = False
-            return self._fallback_data
+            self._failed_update_count += 1
+            if self._failed_update_count >= self.max_failed_updates:
+                self._is_data_available = False
+                self.last_update_success = False
+            else:
+                self._is_data_available = True
+                self.last_update_success = True
+            return self._last_good_data
 
 
 def _make_fallback_meter() -> ApMeterSensorData:
