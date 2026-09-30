@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_DEVICE_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_DEVICE_NAME, DEFAULT_PORT, DOMAIN, LOGGER
 
 
 class ApMeterFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -32,6 +32,7 @@ class ApMeterFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input.get("device_name", DEFAULT_DEVICE_NAME).strip()
                 or DEFAULT_DEVICE_NAME
             )
+            LOGGER.debug("[%s:%s] Validating APmeter SEM connection for config flow", ip, port)
 
             session = async_get_clientsession(self.hass)
             try:
@@ -44,10 +45,12 @@ class ApMeterFlowHandler(ConfigFlow, domain=DOMAIN):
                     payload = await resp.json(content_type=None)
                 if not payload.get("data"):
                     raise ValueError("empty payload")
-            except (aiohttp.ClientError, TimeoutError, ValueError, TypeError):
+            except (aiohttp.ClientError, TimeoutError, ValueError, TypeError) as err:
+                LOGGER.warning("[%s:%s] APmeter SEM validation failed: %s", ip, port, err)
                 errors["base"] = "cannot_connect"
             else:
                 uid = str(payload.get("deviceId") or payload.get("data", {}).get("deviceId") or ip)
+                LOGGER.info("[%s:%s] APmeter SEM validation successful. Device ID: %s", ip, port, uid)
                 await self.async_set_unique_id(uid)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

@@ -246,17 +246,42 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
             result = ApMeterSensorData(output_data=output_data, device_info=device_info)
             self._last_good_data = result
             self._fallback_data = result
+            LOGGER.debug(
+                "[%s] APmeter poll successful: p=%.3f, p1=%.3f, p2=%.3f, p3=%.3f, iE=%.3f, eE=%.3f",
+                self._log_id,
+                output_data.p,
+                output_data.p1,
+                output_data.p2,
+                output_data.p3,
+                output_data.iE,
+                output_data.eE,
+            )
             return result
         except Exception as err:  # noqa: BLE001
-            LOGGER.debug("[%s] APmeter update failed: %s", self._log_id, err)
             self.inverter_reachable = False
             self._failed_update_count += 1
             if self._failed_update_count >= self.max_failed_updates:
                 self._is_data_available = False
                 self.last_update_success = False
+                LOGGER.warning(
+                    "[%s] APmeter update failed %s/%s times; marking sensor data unavailable. Last valid values retained.",
+                    self._log_id,
+                    self._failed_update_count,
+                    self.max_failed_updates,
+                )
             else:
                 self._is_data_available = True
                 self.last_update_success = True
+                LOGGER.debug(
+                    "[%s] APmeter update failed (%s/%s). Retaining last valid data: p=%.3f, iE=%.3f, eE=%.3f",
+                    self._log_id,
+                    self._failed_update_count,
+                    self.max_failed_updates,
+                    self._last_good_data.output_data.p,
+                    self._last_good_data.output_data.iE,
+                    self._last_good_data.output_data.eE,
+                )
+            LOGGER.debug("[%s] APmeter update error details: %s", self._log_id, err)
             return self._last_good_data
 
 
