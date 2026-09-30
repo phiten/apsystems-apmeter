@@ -2,7 +2,7 @@
 
 import logging
 
-DOMAIN = "apsystems"
+DOMAIN = "apsystemsSEM"
 DEFAULT_PORT = 80
 DEFAULT_DEVICE_NAME = "APmeter SEM"
 CONF_DEVICE_NAME = "device_name"

@@ -1,12 +1,12 @@
 {
-  "domain": "apsystems",
+  "domain": "apsystemsSEM",
   "name": "APmeter SEM",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://github.com/shopf/apsystems-apmeter",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["custom_components.apsystems"],
+  "loggers": ["custom_components.apsystemsSEM"],
   "requirements": [],
   "version": "0.1.0"
 }
