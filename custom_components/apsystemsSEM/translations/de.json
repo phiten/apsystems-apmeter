@@ -2,168 +2,112 @@
   "config": {
     "step": {
       "user": {
-        "title": "APsystems Wechselrichter einrichten",
-        "description": "Verbindungsdaten und Namen für deinen Wechselrichter eingeben.",
+        "title": "APmeter SEM einrichten",
+        "description": "IP-Adresse und Namen für den Zähler eingeben.",
         "data": {
           "ip_address": "IP-Adresse",
           "port": "Port",
           "device_name": "Gerätename",
-          "polling_interval": "Abfrageintervall (Sekunden)",
-          "lifetime_offset_p1": "Lifetime-Energie Startoffset Eingang 1 (kWh)",
-          "lifetime_offset_p2": "Lifetime-Energie Startoffset Eingang 2 (kWh)",
-          "battery_system": "Batterie-System (Speicher angeschlossen)",
-          "slow_detail_poll": "Erweiterte Daten langsamer abfragen (empfohlen für EZ1-D)",
-          "detail_poll": "Erweiterte Daten abfragen (Spannung, Strom, Temperatur)"
-        },
-        "data_description": {
-          "ip_address": "Lokale IP-Adresse des Wechselrichters (statische IP empfohlen).",
-          "port": "API-Port des Wechselrichters (Standard: 8050).",
-          "device_name": "Frei wählbarer Name, z. B. 'Balkonkraftwerk' oder 'Garage Solar'.",
-          "polling_interval": "Wie oft der Wechselrichter abgefragt wird (12–60 Sekunden). Kleinere Werte erhöhen die Last auf dem Wechselrichter und können zu WLAN-Verbindungsabbrüchen führen. Standard: 12 Sekunden.",
-          "lifetime_offset_p1": "Optional. Nur ausfüllen wenn der interne Zähler des Wechselrichters bereits einmal auf 0 zurückgesprungen ist (bekannter Firmware-Bug bei ~540 kWh). Wert in kWh eingeben der vor dem Reset bereits erzeugt wurde, z. B. '542.3'. Leer lassen wenn kein Reset stattgefunden hat.",
-          "lifetime_offset_p2": "Gleiche Eingabe wie oben, aber für Eingang 2. Leer lassen wenn kein Reset stattgefunden hat.",
-          "battery_system": "Aktivieren wenn der Wechselrichter an einem Batteriespeicher angeschlossen ist. Aktiviert häufigere Überprüfungen (alle 5 Min. statt 10 Min.) ob die Leistungsbegrenzung nach dem morgendlichen Neustart korrekt wiederhergestellt wurde.",
-          "slow_detail_poll": "Nur wirksam wenn erweiterte Daten abgefragt werden (Option oben). Spannung, Strom und Temperatur werden alle 60 s statt bei jedem Poll abgefragt. Leistungs- und Energiesensoren sind nicht betroffen. Verhindert Timeout-Schleifen bei Wechselrichtern mit begrenzter HTTP-Server-Kapazität (z. B. EZ1-D Firmware 2.x).",
-          "detail_poll": "Wenn deaktiviert werden nur Leistung und Energie abgefragt. Deaktivieren wenn der Wechselrichter auch mit langsamerem Abfragen instabil bleibt (letzter Ausweg, z. B. EZ1-D mit sehr alter Firmware)."
-        }
-      },
-      "reconfigure": {
-        "title": "APsystems Einstellungen anpassen",
-        "description": "{offset_info}Verbindungsdaten oder Lifetime-Energie-Offsets korrigieren.",
-        "data": {
-          "ip_address": "IP-Adresse",
-          "port": "Port",
-          "polling_interval": "Abfrageintervall (Sekunden)",
-          "lifetime_offset_p1": "Lifetime-Energie Startoffset Eingang 1 (kWh)",
-          "lifetime_offset_p2": "Lifetime-Energie Startoffset Eingang 2 (kWh)",
-          "battery_system": "Batterie-System (Speicher angeschlossen)",
-          "slow_detail_poll": "Erweiterte Daten langsamer abfragen (empfohlen für EZ1-D)",
-          "detail_poll": "Erweiterte Daten abfragen (Spannung, Strom, Temperatur)",
-          "alarm_notifications": "HA-Benachrichtigungen bei Alarm"
-        },
-        "data_description": {
-          "lifetime_offset_p1": "Aktuell gespeicherter Offset für Eingang 1. Nur ändern wenn der Wert falsch eingetragen wurde oder ein neuer Reset stattgefunden hat. ⚠️ Negative Werte reduzieren den angezeigten Lifetime-Zähler dauerhaft um diesen Betrag. Korrektur ist über erneutes Reconfigure mit angepasstem Wert möglich.",
-          "lifetime_offset_p2": "Aktuell gespeicherter Offset für Eingang 2. ⚠️ Negative Werte reduzieren den angezeigten Lifetime-Zähler dauerhaft um diesen Betrag. Korrektur ist über erneutes Reconfigure mit angepasstem Wert möglich.",
-          "battery_system": "Aktivieren wenn der Wechselrichter an einem Batteriespeicher angeschlossen ist.",
-          "slow_detail_poll": "Nur wirksam wenn erweiterte Daten abgefragt werden (Option oben). Spannung, Strom und Temperatur werden alle 60 s statt bei jedem Poll abgefragt. Leistungs- und Energiesensoren sind nicht betroffen. Verhindert Timeout-Schleifen bei Wechselrichtern mit begrenzter HTTP-Server-Kapazität (z. B. EZ1-D Firmware 2.x).",
-          "detail_poll": "Wenn deaktiviert werden nur Leistung und Energie abgefragt. Deaktivieren wenn der Wechselrichter auch mit langsamerem Abfragen instabil bleibt (letzter Ausweg, z. B. EZ1-D mit sehr alter Firmware).",
-          "alarm_notifications": "Wenn aktiviert, erscheint bei Kurzschluss oder Netzausfall eine HA-Benachrichtigung. Deaktivieren wenn nur die Sensorenzustände gewünscht sind."
+          "polling_interval": "Abfrageintervall (Sekunden)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zum Wechselrichter fehlgeschlagen. IP-Adresse und Port prüfen.",
-      "invalid_offset": "Ungültiger Offset-Wert. Bitte eine Zahl in kWh eingeben, z. B. '542.3', oder das Feld leer lassen."
+      "cannot_connect": "Verbindung zum APmeter SEM fehlgeschlagen. IP-Adresse und Port prüfen."
     }
   },
   "entity": {
     "sensor": {
-      "total_power": {
-        "name": "Gesamtleistung"
+      "power": {
+        "name": "Leistung"
       },
-      "total_power_p1": {
-        "name": "Leistung von P1"
+      "power_l1": {
+        "name": "Leistung L1"
       },
-      "total_power_p2": {
-        "name": "Leistung von P2"
+      "power_l2": {
+        "name": "Leistung L2"
       },
-      "today_production": {
-        "name": "Heutige Erzeugung"
+      "power_l3": {
+        "name": "Leistung L3"
       },
-      "today_production_p1": {
-        "name": "Heutige Erzeugung von P1"
+      "reactive_power": {
+        "name": "Blindleistung"
       },
-      "today_production_p2": {
-        "name": "Heutige Erzeugung von P2"
+      "reactive_power_l1": {
+        "name": "Blindleistung L1"
       },
-      "lifetime_production": {
-        "name": "Gesamterzeugung über Lebensdauer"
+      "reactive_power_l2": {
+        "name": "Blindleistung L2"
       },
-      "lifetime_production_p1": {
-        "name": "Erzeugung von P1 über Lebensdauer"
+      "reactive_power_l3": {
+        "name": "Blindleistung L3"
       },
-      "lifetime_production_p2": {
-        "name": "Erzeugung von P2 über Lebensdauer"
+      "apparent_power": {
+        "name": "Scheinleistung"
       },
-      "firmware_version": {
-        "name": "Firmware-Version"
+      "apparent_power_l1": {
+        "name": "Scheinleistung L1"
       },
-      "voltage_p1": {
-        "name": "DC-Spannung P1"
+      "apparent_power_l2": {
+        "name": "Scheinleistung L2"
       },
-      "voltage_p2": {
-        "name": "DC-Spannung P2"
+      "apparent_power_l3": {
+        "name": "Scheinleistung L3"
       },
-      "current_p1": {
-        "name": "DC-Strom P1"
+      "voltage_l1": {
+        "name": "Spannung L1"
       },
-      "current_p2": {
-        "name": "DC-Strom P2"
+      "voltage_l2": {
+        "name": "Spannung L2"
       },
-      "grid_voltage": {
-        "name": "Netzspannung"
+      "voltage_l3": {
+        "name": "Spannung L3"
       },
-      "grid_frequency": {
-        "name": "Netzfrequenz"
+      "current_l1": {
+        "name": "Strom L1"
       },
-      "inverter_temperature": {
-        "name": "Wechselrichter Temperatur"
+      "current_l2": {
+        "name": "Strom L2"
       },
-      "flash_write_count": {
-        "name": "Flash-Schreibvorgänge"
-      }
-    },
-    "binary_sensor": {
-      "off_grid_status": {
-        "name": "Netzausfall"
+      "current_l3": {
+        "name": "Strom L3"
       },
-      "dc_1_short_circuit_error_status": {
-        "name": "Kurzschluss Eingang 1"
+      "import_energy": {
+        "name": "Importierte Energie"
       },
-      "dc_2_short_circuit_error_status": {
-        "name": "Kurzschluss Eingang 2"
+      "import_energy_l1": {
+        "name": "Importierte Energie L1"
       },
-      "inverter_active": {
-        "name": "Wechselrichter Aktiv",
-        "state": {
-          "on": "In Betrieb",
-          "off": "Ausgeschaltet"
-        }
-      }
-    },
-    "number": {
-      "max_output": {
-        "name": "Leistungsbegrenzung",
-        "description": "Erlaubter Bereich: 30 W – 800 W (EZ1-M)"
-      }
-    },
-    "switch": {
-      "inverter_status": {
-        "name": "Wechselrichter"
+      "import_energy_l2": {
+        "name": "Importierte Energie L2"
+      },
+      "import_energy_l3": {
+        "name": "Importierte Energie L3"
+      },
+      "export_energy": {
+        "name": "Exportierte Energie"
+      },
+      "export_energy_l1": {
+        "name": "Exportierte Energie L1"
+      },
+      "export_energy_l2": {
+        "name": "Exportierte Energie L2"
+      },
+      "export_energy_l3": {
+        "name": "Exportierte Energie L3"
+      },
+      "power_factor": {
+        "name": "Leistungsfaktor"
+      },
+      "power_factor_l1": {
+        "name": "Leistungsfaktor L1"
+      },
+      "power_factor_l2": {
+        "name": "Leistungsfaktor L2"
+      },
+      "power_factor_l3": {
+        "name": "Leistungsfaktor L3"
       }
     }
-  },
-  "exceptions": {
-    "inverter_error": {
-      "message": "Der Wechselrichter hat einen Fehler zurückgegeben. Möglicherweise befindet er sich im Standby- oder Nachtmodus."
-    },
-    "inverter_unreachable": {
-      "message": "Der Wechselrichter ist nicht erreichbar. Netzwerkverbindung und IP-Adresse prüfen."
-    }
-  },
-  "notifications": {
-    "shortcircuit_1": {
-      "title": "Kurzschluss an Eingang 1",
-      "message": "Kurzschluss an Eingang 1 erkannt."
-    },
-    "shortcircuit_2": {
-      "title": "Kurzschluss an Eingang 2",
-      "message": "Kurzschluss an Eingang 2 erkannt."
-    },
-    "offgrid": {
-      "title": "Netzausfall",
-      "message": "Netzausfall erkannt."
-    },
-    "guidance": "**Empfohlene Schritte:**\n1. Gerät und angeschlossene Panels überprüfen\n2. Wechselrichter stromlos schalten und nach Neustart erneut prüfen\n3. Wenn der Fehler bestehen bleibt: APsystems Support kontaktieren"
   }
 }

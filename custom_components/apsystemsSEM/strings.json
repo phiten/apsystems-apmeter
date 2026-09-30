@@ -18,47 +18,95 @@
   },
   "entity": {
     "sensor": {
-      "total_power": {
-        "name": "Total power"
+      "power": {
+        "name": "Leistung"
       },
-      "power_p1": {
-        "name": "Power L1"
+      "power_l1": {
+        "name": "Leistung L1"
       },
-      "power_p2": {
-        "name": "Power L2"
+      "power_l2": {
+        "name": "Leistung L2"
       },
-      "power_p3": {
-        "name": "Power L3"
+      "power_l3": {
+        "name": "Leistung L3"
       },
-      "total_reactive_power": {
-        "name": "Total reactive power"
+      "reactive_power": {
+        "name": "Blindleistung"
       },
-      "total_apparent_power": {
-        "name": "Total apparent power"
+      "reactive_power_l1": {
+        "name": "Blindleistung L1"
+      },
+      "reactive_power_l2": {
+        "name": "Blindleistung L2"
+      },
+      "reactive_power_l3": {
+        "name": "Blindleistung L3"
+      },
+      "apparent_power": {
+        "name": "Scheinleistung"
+      },
+      "apparent_power_l1": {
+        "name": "Scheinleistung L1"
+      },
+      "apparent_power_l2": {
+        "name": "Scheinleistung L2"
+      },
+      "apparent_power_l3": {
+        "name": "Scheinleistung L3"
       },
       "voltage_l1": {
-        "name": "Voltage L1"
+        "name": "Spannung L1"
       },
       "voltage_l2": {
-        "name": "Voltage L2"
+        "name": "Spannung L2"
       },
       "voltage_l3": {
-        "name": "Voltage L3"
+        "name": "Spannung L3"
       },
       "current_l1": {
-        "name": "Current L1"
+        "name": "Strom L1"
       },
       "current_l2": {
-        "name": "Current L2"
+        "name": "Strom L2"
       },
       "current_l3": {
-        "name": "Current L3"
+        "name": "Strom L3"
       },
-      "total_import_energy": {
-        "name": "Total import energy"
+      "import_energy": {
+        "name": "Importierte Energie"
+      },
+      "import_energy_l1": {
+        "name": "Importierte Energie L1"
+      },
+      "import_energy_l2": {
+        "name": "Importierte Energie L2"
+      },
+      "import_energy_l3": {
+        "name": "Importierte Energie L3"
+      },
+      "export_energy": {
+        "name": "Exportierte Energie"
+      },
+      "export_energy_l1": {
+        "name": "Exportierte Energie L1"
+      },
+      "export_energy_l2": {
+        "name": "Exportierte Energie L2"
+      },
+      "export_energy_l3": {
+        "name": "Exportierte Energie L3"
       },
       "power_factor": {
-        "name": "Power factor"
+        "name": "Leistungsfaktor"
+      },
+      "power_factor_l1": {
+        "name": "Leistungsfaktor L1"
+      },
+      "power_factor_l2": {
+        "name": "Leistungsfaktor L2"
+      },
+      "power_factor_l3": {
+        "name": "Leistungsfaktor L3"
       }
     }
   }
