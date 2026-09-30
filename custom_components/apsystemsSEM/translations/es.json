@@ -2,168 +2,112 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configurar inversor APsystems",
-        "description": "Introduce los datos de conexión y un nombre para tu inversor.",
+        "title": "Configurar APmeter SEM",
+        "description": "Introduce la dirección IP del medidor y un nombre para el dispositivo.",
         "data": {
           "ip_address": "Dirección IP",
           "port": "Puerto",
           "device_name": "Nombre del dispositivo",
-          "polling_interval": "Intervalo de consulta (segundos)",
-          "lifetime_offset_p1": "Desplazamiento inicial energía total entrada 1 (kWh)",
-          "lifetime_offset_p2": "Desplazamiento inicial energía total entrada 2 (kWh)",
-          "battery_system": "Sistema de batería (almacenamiento conectado)",
-          "slow_detail_poll": "Ralentizar consulta de datos extendidos (recomendado para EZ1-D)",
-          "detail_poll": "Consultar datos extendidos (tensión, corriente, temperatura)"
-        },
-        "data_description": {
-          "ip_address": "Dirección IP local del inversor (se recomienda IP estática).",
-          "port": "Puerto API del inversor (predeterminado: 8050).",
-          "device_name": "Nombre personalizado, p. ej. 'Solar Balcón' o 'Solar Garaje'.",
-          "polling_interval": "Con qué frecuencia se consulta el inversor (12–60 segundos). Valores menores aumentan la carga y pueden causar desconexiones Wi-Fi. Predeterminado: 12 segundos.",
-          "lifetime_offset_p1": "Opcional. Rellenar solo si el contador interno del inversor ya se ha reiniciado a 0 (bug de firmware conocido a ~540 kWh). Introduce el valor producido antes del reinicio en kWh, p. ej. '542.3'. Dejar vacío si no ha ocurrido ningún reinicio.",
-          "lifetime_offset_p2": "Igual que arriba pero para la entrada 2. Dejar vacío si no ha ocurrido ningún reinicio.",
-          "battery_system": "Activar si el inversor está conectado a un sistema de almacenamiento de batería. Activa verificaciones más frecuentes (cada 5 min en lugar de 10 min) de que el límite de potencia se restaura correctamente tras el reinicio matutino.",
-          "slow_detail_poll": "Solo aplica si la consulta de datos extendidos está activada. Tensión, corriente y temperatura se consultan cada 60 s en lugar de cada ciclo. Previene bucles de tiempo de espera en inversores con capacidad HTTP limitada.",
-          "detail_poll": "Si está desactivado, solo se consultan potencia y energía. Desactivar si el inversor sigue siendo inestable (último recurso, especialmente para EZ1-D con firmware muy antiguo)."
-        }
-      },
-      "reconfigure": {
-        "title": "Actualizar configuración APsystems",
-        "description": "{offset_info}Corregir datos de conexión o desplazamientos de energía total.",
-        "data": {
-          "ip_address": "Dirección IP",
-          "port": "Puerto",
-          "polling_interval": "Intervalo de consulta (segundos)",
-          "lifetime_offset_p1": "Desplazamiento inicial energía total entrada 1 (kWh)",
-          "lifetime_offset_p2": "Desplazamiento inicial energía total entrada 2 (kWh)",
-          "battery_system": "Sistema de batería (almacenamiento conectado)",
-          "slow_detail_poll": "Ralentizar consulta de datos extendidos (recomendado para EZ1-D)",
-          "detail_poll": "Consultar datos extendidos (tensión, corriente, temperatura)",
-          "alarm_notifications": "Notificaciones HA en caso de alarma"
-        },
-        "data_description": {
-          "lifetime_offset_p1": "Desplazamiento actualmente almacenado para la entrada 1. Solo cambiar si el valor es incorrecto o ha ocurrido un nuevo reinicio. ⚠️ Los valores negativos reducen permanentemente el contador mostrado.",
-          "lifetime_offset_p2": "Desplazamiento actualmente almacenado para la entrada 2. ⚠️ Los valores negativos reducen permanentemente el contador mostrado.",
-          "battery_system": "Activar si el inversor está conectado a un sistema de almacenamiento de batería.",
-          "slow_detail_poll": "Tensión, corriente y temperatura se consultan cada 60 s. Previene bucles de tiempo de espera en inversores con capacidad HTTP limitada.",
-          "detail_poll": "Si está desactivado, solo se consultan potencia y energía.",
-          "alarm_notifications": "Si está activado, aparece una notificación persistente de HA en caso de cortocircuito o fallo de red. Desactivar si prefiere monitorizar los estados de alarma solo mediante sensores."
+          "polling_interval": "Intervalo de consulta (segundos)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Error al conectar con el inversor. Comprueba la dirección IP y el puerto.",
-      "invalid_offset": "Valor de desplazamiento no válido. Introduce un número en kWh, p. ej. '542.3', o deja el campo vacío."
+      "cannot_connect": "No se pudo conectar al APmeter SEM. Comprueba la dirección IP y el puerto."
     }
   },
   "entity": {
     "sensor": {
-      "total_power": {
-        "name": "Potencia total"
+      "power": {
+        "name": "Potencia"
       },
-      "total_power_p1": {
-        "name": "Potencia de P1"
+      "power_l1": {
+        "name": "Potencia L1"
       },
-      "total_power_p2": {
-        "name": "Potencia de P2"
+      "power_l2": {
+        "name": "Potencia L2"
       },
-      "today_production": {
-        "name": "Producción de hoy"
+      "power_l3": {
+        "name": "Potencia L3"
       },
-      "today_production_p1": {
-        "name": "Producción de P1 hoy"
+      "reactive_power": {
+        "name": "Potencia reactiva"
       },
-      "today_production_p2": {
-        "name": "Producción de P2 hoy"
+      "reactive_power_l1": {
+        "name": "Potencia reactiva L1"
       },
-      "lifetime_production": {
-        "name": "Producción total en la vida útil"
+      "reactive_power_l2": {
+        "name": "Potencia reactiva L2"
       },
-      "lifetime_production_p1": {
-        "name": "Producción de P1 en la vida útil"
+      "reactive_power_l3": {
+        "name": "Potencia reactiva L3"
       },
-      "lifetime_production_p2": {
-        "name": "Producción de P2 en la vida útil"
+      "apparent_power": {
+        "name": "Potencia aparente"
       },
-      "firmware_version": {
-        "name": "Versión de firmware"
+      "apparent_power_l1": {
+        "name": "Potencia aparente L1"
       },
-      "voltage_p1": {
-        "name": "Tensión DC P1"
+      "apparent_power_l2": {
+        "name": "Potencia aparente L2"
       },
-      "voltage_p2": {
-        "name": "Tensión DC P2"
+      "apparent_power_l3": {
+        "name": "Potencia aparente L3"
       },
-      "current_p1": {
-        "name": "Corriente DC P1"
+      "voltage_l1": {
+        "name": "Voltaje L1"
       },
-      "current_p2": {
-        "name": "Corriente DC P2"
+      "voltage_l2": {
+        "name": "Voltaje L2"
       },
-      "grid_voltage": {
-        "name": "Tensión de red"
+      "voltage_l3": {
+        "name": "Voltaje L3"
       },
-      "grid_frequency": {
-        "name": "Frecuencia de red"
+      "current_l1": {
+        "name": "Corriente L1"
       },
-      "inverter_temperature": {
-        "name": "Temperatura del inversor"
+      "current_l2": {
+        "name": "Corriente L2"
       },
-      "flash_write_count": {
-        "name": "Escrituras flash"
-      }
-    },
-    "binary_sensor": {
-      "off_grid_status": {
-        "name": "Fallo de red"
+      "current_l3": {
+        "name": "Corriente L3"
       },
-      "dc_1_short_circuit_error_status": {
-        "name": "Cortocircuito entrada 1"
+      "import_energy": {
+        "name": "Energía importada"
       },
-      "dc_2_short_circuit_error_status": {
-        "name": "Cortocircuito entrada 2"
+      "import_energy_l1": {
+        "name": "Energía importada L1"
       },
-      "inverter_active": {
-        "name": "Inversor activo",
-        "state": {
-          "on": "En funcionamiento",
-          "off": "Apagado"
-        }
-      }
-    },
-    "number": {
-      "max_output": {
-        "name": "Límite de potencia",
-        "description": "Rango permitido: 30 W – 800 W (EZ1-M)"
-      }
-    },
-    "switch": {
-      "inverter_status": {
-        "name": "Inversor"
+      "import_energy_l2": {
+        "name": "Energía importada L2"
+      },
+      "import_energy_l3": {
+        "name": "Energía importada L3"
+      },
+      "export_energy": {
+        "name": "Energía exportada"
+      },
+      "export_energy_l1": {
+        "name": "Energía exportada L1"
+      },
+      "export_energy_l2": {
+        "name": "Energía exportada L2"
+      },
+      "export_energy_l3": {
+        "name": "Energía exportada L3"
+      },
+      "power_factor": {
+        "name": "Factor de potencia"
+      },
+      "power_factor_l1": {
+        "name": "Factor de potencia L1"
+      },
+      "power_factor_l2": {
+        "name": "Factor de potencia L2"
+      },
+      "power_factor_l3": {
+        "name": "Factor de potencia L3"
       }
     }
-  },
-  "exceptions": {
-    "inverter_error": {
-      "message": "El inversor devolvió un error. Es posible que esté en modo de espera o nocturno."
-    },
-    "inverter_unreachable": {
-      "message": "El inversor no es accesible. Comprueba la conexión de red y la dirección IP."
-    }
-  },
-  "notifications": {
-    "shortcircuit_1": {
-      "title": "Cortocircuito en la entrada 1",
-      "message": "Cortocircuito detectado en la entrada 1."
-    },
-    "shortcircuit_2": {
-      "title": "Cortocircuito en la entrada 2",
-      "message": "Cortocircuito detectado en la entrada 2."
-    },
-    "offgrid": {
-      "title": "Fallo de red",
-      "message": "Fallo de red detectado."
-    },
-    "guidance": "**Pasos recomendados:**\n1. Verificar el dispositivo y los paneles conectados\n2. Reiniciar el inversor y verificar de nuevo tras el reinicio\n3. Si el problema persiste, contactar con el soporte de APsystems"
   }
 }
