@@ -1,12 +1,12 @@
 {
   "domain": "apsystems",
-  "name": "APsystems (Community Enhanced)",
+  "name": "APmeter SEM",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/apsystems",
+  "documentation": "https://github.com/shopf/apsystems-apmeter",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["APsystemsEZ1"],
-  "requirements": ["apsystems-ez1==2.7.0"],
-  "version": "1.7.0"
+  "loggers": ["custom_components.apsystems"],
+  "requirements": [],
+  "version": "0.1.0"
 }

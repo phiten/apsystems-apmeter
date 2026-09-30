@@ -1,19 +1,19 @@
-"""Base entity for APsystems integration."""
+"""Base entity for APmeter integration."""
 
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONF_DEVICE_NAME, DEFAULT_DEVICE_NAME, DOMAIN
-from .coordinator import ApSystemsData
+from .coordinator import ApMeterData
 
 
 class ApSystemsEntity:
-    """Defines a base APsystems entity."""
+    """Defines a base APmeter entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, data: ApSystemsData) -> None:
+    def __init__(self, data: ApMeterData) -> None:
         """Initialize the entity."""
         self._device_id = data.device_id
         self._coordinator = data.coordinator
