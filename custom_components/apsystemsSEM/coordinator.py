@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 import json
+import math
 from typing import Any
 
 import aiohttp
@@ -134,9 +135,12 @@ class APmeterClient:
             if value in (None, "", "null"):
                 return default
             try:
-                return float(value)
+                value = float(value)
             except (TypeError, ValueError):
                 return default
+            if not math.isfinite(value):
+                return default
+            return value
 
         return ApMeterOutputData(
             p1=_num("p1"),
@@ -212,6 +216,32 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
     def is_data_available(self) -> bool:
         return self._is_data_available
 
+    def _sanitize_energy_counters(self, new_data: ApMeterOutputData) -> ApMeterOutputData:
+        """Reject suspicious drops in cumulative energy values. The APmeter can occasionally return an invalid zero during a transient response; keep the previous valid total instead."""
+        if self._last_good_data is None:
+            return new_data
+
+        previous = self._last_good_data.output_data
+        sanitized = new_data
+        energy_keys = ("iE1", "iE2", "iE3", "iE", "eE1", "eE2", "eE3", "eE")
+
+        for key in energy_keys:
+            current_value = float(getattr(new_data, key, 0.0))
+            previous_value = float(getattr(previous, key, 0.0))
+            if not math.isfinite(current_value) or not math.isfinite(previous_value):
+                continue
+            if previous_value > 0 and current_value < previous_value:
+                LOGGER.warning(
+                    "[%s] Rejecting invalid APmeter energy counter drop for %s: %.3f -> %.3f. Keeping last valid value.",
+                    self._log_id,
+                    key,
+                    previous_value,
+                    current_value,
+                )
+                sanitized = replace(sanitized, **{key: previous_value})
+
+        return sanitized
+
     async def _async_setup(self) -> None:
         try:
             info = await self.api.get_device_info()
@@ -229,6 +259,7 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
             self.device_version = device_info.devVer or "unknown"
             self.device_ip = device_info.ip or self.config_entry.data.get(CONF_IP_ADDRESS, "unknown")
             output_data = await self.api.get_output_data()
+            output_data = self._sanitize_energy_counters(output_data)
             self.inverter_reachable = True
             self._failed_update_count = 0
             self._is_data_available = True
