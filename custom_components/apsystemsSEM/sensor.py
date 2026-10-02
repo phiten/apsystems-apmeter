@@ -306,6 +306,7 @@ class ApMeterSensorWithDescription(
         ApSystemsEntity.__init__(self, data)
         self.entity_description = entity_description
         self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
+        self._attr_force_update = entity_description.device_class is SensorDeviceClass.ENERGY
 
     @property
     def native_value(self) -> StateType:

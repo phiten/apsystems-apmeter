@@ -230,7 +230,7 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
             previous_value = float(getattr(previous, key, 0.0))
             if not math.isfinite(current_value) or not math.isfinite(previous_value):
                 continue
-            if previous_value > 0 and current_value <= previous_value:
+            if previous_value > 0 and current_value < previous_value:
                 LOGGER.warning(
                     "[%s] Rejecting invalid APmeter energy counter drop for %s: %.3f -> %.3f. Keeping last valid value.",
                     self._log_id,
