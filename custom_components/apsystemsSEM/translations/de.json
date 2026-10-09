@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "APmeter SEM ({host})",
     "step": {
       "user": {
         "title": "APmeter SEM einrichten",
@@ -8,12 +9,50 @@
           "ip_address": "IP-Adresse",
           "port": "Port",
           "device_name": "Gerätename",
-          "polling_interval": "Abfrageintervall (Sekunden)"
+          "polling_interval": "Abfrageintervall (Sekunden)",
+          "tcp_enabled": "Schnelle Leistung über Port 3333",
+          "tcp_port": "Port für schnelle Leistung",
+          "tcp_interval": "Intervall schnelle Leistung (Sekunden)"
+        },
+        "data_description": {
+          "tcp_enabled": "Liest die Leistungswerte (gesamt und L1-L3) etwa jede Sekunde über den lokalen TCP-Port 3333 des Zählers, denselben Kanal, den der EZHI für Local Control nutzt. Unverschlüsselt, nur im lokalen Netz. Spannung, Strom, Leistungsfaktor und Energie kommen weiter per HTTP.",
+          "tcp_interval": "0,5 bis 5 Sekunden."
         }
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zum APmeter SEM fehlgeschlagen. IP-Adresse und Port prüfen."
+      "cannot_connect": "Verbindung zum APmeter SEM fehlgeschlagen. IP-Adresse und Port prüfen.",
+      "tcp_cannot_connect": "Der Zähler antwortet nicht auf dem Port für schnelle Leistung. Prüfen, ob Home Assistant den Zähler auf diesem Port erreicht, oder schnelle Leistung ausschalten und nur HTTP nutzen.",
+      "tcp_invalid_frame": "Der Zähler hat auf dem Port für schnelle Leistung geantwortet, aber die Daten waren ungültig. Schnelle Leistung ausschalten, um nur HTTP zu nutzen.",
+      "tcp_id_mismatch": "Die Zähler-ID auf dem Port für schnelle Leistung passt nicht zu diesem Gerät. IP-Adresse prüfen oder schnelle Leistung ausschalten und nur HTTP nutzen."
+    },
+    "abort": {
+      "already_configured": "Dieser Zähler ist bereits eingerichtet.",
+      "cannot_connect": "Der gefundene Zähler antwortet nicht per HTTP.",
+      "not_apmeter": "Das gefundene Gerät ist kein APsystems-Zähler."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "APmeter SEM Optionen",
+        "description": "HTTP-Abfrage und schneller Leistungskanal über Port 3333.",
+        "data": {
+          "polling_interval": "Abfrageintervall (Sekunden)",
+          "tcp_enabled": "Schnelle Leistung über Port 3333",
+          "tcp_port": "Port für schnelle Leistung",
+          "tcp_interval": "Intervall schnelle Leistung (Sekunden)"
+        },
+        "data_description": {
+          "tcp_enabled": "Liest die Leistungswerte (gesamt und L1-L3) etwa jede Sekunde über den lokalen TCP-Port 3333 des Zählers, denselben Kanal, den der EZHI für Local Control nutzt. Unverschlüsselt, nur im lokalen Netz. Spannung, Strom, Leistungsfaktor und Energie kommen weiter per HTTP.",
+          "tcp_interval": "0,5 bis 5 Sekunden."
+        }
+      }
+    },
+    "error": {
+      "tcp_cannot_connect": "Der Zähler antwortet nicht auf dem Port für schnelle Leistung. Prüfen, ob Home Assistant den Zähler auf diesem Port erreicht, oder schnelle Leistung ausschalten und nur HTTP nutzen.",
+      "tcp_invalid_frame": "Der Zähler hat auf dem Port für schnelle Leistung geantwortet, aber die Daten waren ungültig. Schnelle Leistung ausschalten, um nur HTTP zu nutzen.",
+      "tcp_id_mismatch": "Die Zähler-ID auf dem Port für schnelle Leistung passt nicht zu diesem Gerät. IP-Adresse prüfen oder schnelle Leistung ausschalten und nur HTTP nutzen."
     }
   },
   "entity": {

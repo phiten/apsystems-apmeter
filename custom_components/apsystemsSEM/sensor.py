@@ -30,6 +30,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import LOGGER
 from .coordinator import ApMeterConfigEntry, ApMeterData, ApMeterDataCoordinator, ApMeterOutputData
 from .entity import ApSystemsEntity
+from .sem_tcp import SemFrame
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,6 +38,8 @@ class ApMeterSensorDescription(SensorEntityDescription):
     """Describes APmeter sensor entity."""
 
     value_fn: Callable[[ApMeterOutputData], float | None]
+    # Value from a port-3333 frame; used instead of value_fn while frames are fresh.
+    tcp_value_fn: Callable[[SemFrame], float] | None = None
 
 
 SENSORS: tuple[ApMeterSensorDescription, ...] = (
@@ -47,6 +50,7 @@ SENSORS: tuple[ApMeterSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.p,
+        tcp_value_fn=lambda f: round(f.p, 1),
     ),
     ApMeterSensorDescription(
         key="power_l1",
@@ -55,6 +59,7 @@ SENSORS: tuple[ApMeterSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.p1,
+        tcp_value_fn=lambda f: round(f.l1, 1),
     ),
     ApMeterSensorDescription(
         key="power_l2",
@@ -63,6 +68,7 @@ SENSORS: tuple[ApMeterSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.p2,
+        tcp_value_fn=lambda f: round(f.l2, 1),
     ),
     ApMeterSensorDescription(
         key="power_l3",
@@ -71,6 +77,7 @@ SENSORS: tuple[ApMeterSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.p3,
+        tcp_value_fn=lambda f: round(f.l3, 1),
     ),
     ApMeterSensorDescription(
         key="reactive_power",
@@ -307,15 +314,39 @@ class ApMeterSensorWithDescription(
         self.entity_description = entity_description
         self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
         self._attr_force_update = entity_description.device_class is SensorDeviceClass.ENERGY
+        self._tcp_coordinator = data.tcp_coordinator if entity_description.tcp_value_fn else None
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self._tcp_coordinator is not None:
+            self.async_on_remove(
+                self._tcp_coordinator.async_add_listener(self._handle_coordinator_update)
+            )
+
+    def _fresh_frame(self) -> SemFrame | None:
+        if self._tcp_coordinator is None:
+            return None
+        return self._tcp_coordinator.fresh_frame()
 
     @property
     def native_value(self) -> StateType:
+        frame = self._fresh_frame()
+        if frame is not None and self.entity_description.tcp_value_fn is not None:
+            return self.entity_description.tcp_value_fn(frame)
         if self.coordinator.data is None:
             return None
         return self.entity_description.value_fn(self.coordinator.data.output_data)
 
     @property
     def available(self) -> bool:
+        if self._fresh_frame() is not None:
+            return True
         if self.coordinator.data is None:
             return False
         return getattr(self.coordinator, "is_data_available", True)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        if self._tcp_coordinator is None:
+            return None
+        return {"source": "tcp" if self._fresh_frame() is not None else "http"}
