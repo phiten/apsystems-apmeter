@@ -12,6 +12,7 @@
 - pytest suite for the protocol module with a fake meter on 127.0.0.1.
 
 ### Changed
+- Minimum Home Assistant version in `hacs.json` raised to 2025.2.0. The sensor platform already needed it (`AddConfigEntryEntitiesCallback`).
 - While port 3333 delivers values, HTTP is polled at least every 15 s instead of the configured interval. Voltage, current, power factor and energy still come from HTTP.
 
 ### Security
