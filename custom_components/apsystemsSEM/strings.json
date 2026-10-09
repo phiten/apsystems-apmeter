@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "APmeter SEM ({host})",
     "step": {
       "user": {
         "title": "Set up APmeter SEM",
@@ -8,12 +9,50 @@
           "ip_address": "IP address",
           "port": "Port",
           "device_name": "Device name",
-          "polling_interval": "Poll interval (seconds)"
+          "polling_interval": "Poll interval (seconds)",
+          "tcp_enabled": "Fast power via port 3333",
+          "tcp_port": "Fast power port",
+          "tcp_interval": "Fast power interval (seconds)"
+        },
+        "data_description": {
+          "tcp_enabled": "Reads the power values (total and L1-L3) about every second over the meter's local TCP port 3333, the same channel the EZHI uses for Local Control. Unencrypted, local network only. Voltage, current, power factor and energy still come via HTTP.",
+          "tcp_interval": "0.5 to 5 seconds."
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the APmeter SEM. Check the IP address and port."
+      "cannot_connect": "Failed to connect to the APmeter SEM. Check the IP address and port.",
+      "tcp_cannot_connect": "The meter did not answer on the fast power port. Check that Home Assistant can reach the meter on this port, or switch off fast power to use HTTP only.",
+      "tcp_invalid_frame": "The meter answered on the fast power port, but the data was invalid. Switch off fast power to use HTTP only.",
+      "tcp_id_mismatch": "The meter ID on the fast power port does not match this device. Check the IP address, or switch off fast power to use HTTP only."
+    },
+    "abort": {
+      "already_configured": "This meter is already configured.",
+      "cannot_connect": "The discovered meter did not answer via HTTP.",
+      "not_apmeter": "The discovered device is not an APsystems meter."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "APmeter SEM options",
+        "description": "HTTP polling and the fast power channel on port 3333.",
+        "data": {
+          "polling_interval": "Poll interval (seconds)",
+          "tcp_enabled": "Fast power via port 3333",
+          "tcp_port": "Fast power port",
+          "tcp_interval": "Fast power interval (seconds)"
+        },
+        "data_description": {
+          "tcp_enabled": "Reads the power values (total and L1-L3) about every second over the meter's local TCP port 3333, the same channel the EZHI uses for Local Control. Unencrypted, local network only. Voltage, current, power factor and energy still come via HTTP.",
+          "tcp_interval": "0.5 to 5 seconds."
+        }
+      }
+    },
+    "error": {
+      "tcp_cannot_connect": "The meter did not answer on the fast power port. Check that Home Assistant can reach the meter on this port, or switch off fast power to use HTTP only.",
+      "tcp_invalid_frame": "The meter answered on the fast power port, but the data was invalid. Switch off fast power to use HTTP only.",
+      "tcp_id_mismatch": "The meter ID on the fast power port does not match this device. Check the IP address, or switch off fast power to use HTTP only."
     }
   },
   "entity": {

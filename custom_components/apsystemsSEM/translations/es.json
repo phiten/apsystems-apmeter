@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "APmeter SEM ({host})",
     "step": {
       "user": {
         "title": "Configurar APmeter SEM",
@@ -8,12 +9,50 @@
           "ip_address": "Dirección IP",
           "port": "Puerto",
           "device_name": "Nombre del dispositivo",
-          "polling_interval": "Intervalo de consulta (segundos)"
+          "polling_interval": "Intervalo de consulta (segundos)",
+          "tcp_enabled": "Potencia rápida por el puerto 3333",
+          "tcp_port": "Puerto de potencia rápida",
+          "tcp_interval": "Intervalo de potencia rápida (segundos)"
+        },
+        "data_description": {
+          "tcp_enabled": "Lee los valores de potencia (total y L1-L3) aproximadamente cada segundo por el puerto TCP local 3333 del medidor, el mismo canal que usa el EZHI para Local Control. Sin cifrar, solo en la red local. Tensión, corriente, factor de potencia y energía siguen llegando por HTTP.",
+          "tcp_interval": "De 0,5 a 5 segundos."
         }
       }
     },
     "error": {
-      "cannot_connect": "No se pudo conectar al APmeter SEM. Comprueba la dirección IP y el puerto."
+      "cannot_connect": "No se pudo conectar al APmeter SEM. Comprueba la dirección IP y el puerto.",
+      "tcp_cannot_connect": "El medidor no responde en el puerto de potencia rápida. Comprueba que Home Assistant pueda llegar al medidor en este puerto o desactiva la potencia rápida para usar solo HTTP.",
+      "tcp_invalid_frame": "El medidor respondió en el puerto de potencia rápida, pero los datos no eran válidos. Desactiva la potencia rápida para usar solo HTTP.",
+      "tcp_id_mismatch": "El ID del medidor en el puerto de potencia rápida no coincide con este dispositivo. Comprueba la dirección IP o desactiva la potencia rápida para usar solo HTTP."
+    },
+    "abort": {
+      "already_configured": "Este medidor ya está configurado.",
+      "cannot_connect": "El medidor encontrado no responde por HTTP.",
+      "not_apmeter": "El dispositivo encontrado no es un medidor de APsystems."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de APmeter SEM",
+        "description": "Consulta HTTP y canal de potencia rápida por el puerto 3333.",
+        "data": {
+          "polling_interval": "Intervalo de consulta (segundos)",
+          "tcp_enabled": "Potencia rápida por el puerto 3333",
+          "tcp_port": "Puerto de potencia rápida",
+          "tcp_interval": "Intervalo de potencia rápida (segundos)"
+        },
+        "data_description": {
+          "tcp_enabled": "Lee los valores de potencia (total y L1-L3) aproximadamente cada segundo por el puerto TCP local 3333 del medidor, el mismo canal que usa el EZHI para Local Control. Sin cifrar, solo en la red local. Tensión, corriente, factor de potencia y energía siguen llegando por HTTP.",
+          "tcp_interval": "De 0,5 a 5 segundos."
+        }
+      }
+    },
+    "error": {
+      "tcp_cannot_connect": "El medidor no responde en el puerto de potencia rápida. Comprueba que Home Assistant pueda llegar al medidor en este puerto o desactiva la potencia rápida para usar solo HTTP.",
+      "tcp_invalid_frame": "El medidor respondió en el puerto de potencia rápida, pero los datos no eran válidos. Desactiva la potencia rápida para usar solo HTTP.",
+      "tcp_id_mismatch": "El ID del medidor en el puerto de potencia rápida no coincide con este dispositivo. Comprueba la dirección IP o desactiva la potencia rápida para usar solo HTTP."
     }
   },
   "entity": {

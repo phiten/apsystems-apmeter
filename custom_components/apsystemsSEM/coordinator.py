@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 import json
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
@@ -19,7 +19,11 @@ from .const import (
     CONF_POLLING_INTERVAL,
     LOGGER,
     POLLING_INTERVAL,
+    TCP_HTTP_POLLING_INTERVAL,
 )
+
+if TYPE_CHECKING:
+    from .tcp_coordinator import ApMeterTcpCoordinator
 
 
 @dataclass
@@ -85,9 +89,17 @@ class ApMeterData:
 
     coordinator: ApMeterDataCoordinator
     device_id: str
+    tcp_coordinator: ApMeterTcpCoordinator | None = None
 
 
 type ApMeterConfigEntry = ConfigEntry[ApMeterData]
+
+
+def get_entry_value(entry: ConfigEntry, key: str, default: Any = None) -> Any:
+    """Read a setting from the options, falling back to the initial setup data."""
+    if key in entry.options:
+        return entry.options[key]
+    return entry.data.get(key, default)
 
 
 class APmeterClient:
@@ -191,9 +203,10 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
             LOGGER,
             config_entry=config_entry,
             name="APmeter Data",
-            update_interval=timedelta(seconds=config_entry.data.get(CONF_POLLING_INTERVAL, POLLING_INTERVAL)),
+            update_interval=timedelta(seconds=get_entry_value(config_entry, CONF_POLLING_INTERVAL, POLLING_INTERVAL)),
         )
         self.api = api
+        self.configured_interval = self.update_interval
         self.device_version = "unknown"
         self.device_ip = config_entry.data.get(CONF_IP_ADDRESS, "unknown")
         self._fallback_data = ApMeterSensorData(
@@ -215,6 +228,24 @@ class ApMeterDataCoordinator(DataUpdateCoordinator[ApMeterSensorData]):
     @property
     def is_data_available(self) -> bool:
         return self._is_data_available
+
+    def set_tcp_active(self, active: bool) -> None:
+        """Poll HTTP less often while port 3333 delivers the power values."""
+        assert self.configured_interval is not None
+        interval = self.configured_interval
+        if active:
+            interval = max(interval, timedelta(seconds=TCP_HTTP_POLLING_INTERVAL))
+        if interval == self.update_interval:
+            return
+        self.update_interval = interval
+        LOGGER.info(
+            "[%s] Port 3333 power values %s; HTTP poll interval now %ss",
+            self._log_id,
+            "active" if active else "stale, using HTTP power values",
+            int(interval.total_seconds()),
+        )
+        if not active:
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
     def _sanitize_energy_counters(self, new_data: ApMeterOutputData) -> ApMeterOutputData:
         """Reject suspicious drops in cumulative energy values. The APmeter can occasionally return an invalid zero during a transient response; keep the previous valid total instead."""
